@@ -26,8 +26,15 @@ MathJax.Hub.Queue(function () {
     toMathML(jax[0], function (mathML) {
         console.log(jax[0].originalText);
         console.log(mathML);
-        var svg = document.querySelector('.MathJax_SVG_Display svg');
-        console.log((new XMLSerializer()).serializeToString(svg));
+        var svgElements = document.querySelectorAll('svg');
+        var serializer = new XMLSerializer();
+        var svgMarkup = '';
+        for (var i = 0; i < svgElements.length; i++) {
+            if (!svgElements[i].getAttribute('viewBox'))
+                svgElements[i].style.display = 'none';
+            svgMarkup += serializer.serializeToString(svgElements[i]).replace(/href=/g, 'xlink:href=');
+        }
+        console.log(svgMarkup);
         console.log('done');
     });
 });
