@@ -15,7 +15,6 @@ function main() {
         page.open('mathjax-sandbox.html', function (status) {
             page.evaluate(function (texExpression) {
                 document.body.textContent = '$$' + texExpression + '$$';
-                MathJax.Hub.Queue(function () { window.mathJaxIsDone = true; });
             }, texExpression);
             page.onConsoleMessage = function (line) {
                 if (line == 'done')
