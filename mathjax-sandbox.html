@@ -26,11 +26,12 @@ MathJax.Hub.Queue(function () {
     toMathML(jax[0], function (mathML) {
         console.log(jax[0].originalText);
         console.log(mathML);
-        console.log((new XMLSerializer()).serializeToString(document.querySelector('svg')));
+        var svg = document.querySelector('.MathJax_SVG_Display svg');
+        console.log((new XMLSerializer()).serializeToString(svg));
         console.log('done');
     });
 });
 </script>
 </head>
-<body>$$x_1, x_2 , \cdots x_n.$$</body>
+<body></body>
 </html>
