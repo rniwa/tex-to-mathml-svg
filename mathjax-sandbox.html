@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    jax: ["input/TeX","input/MathML","output/SVG","output/NativeMML"],
+    extensions: ["tex2jax.js", "toMathML.js"],
+});
+</script>
+<script src="MathJax/MathJax.js"></script>
+<script>
+// http://docs.mathjax.org/en/latest/toMathML.html
+function toMathML(jax, callback) {
+    var mathML;
+    try {
+        mathML = jax.root.toMathML("");
+    } catch(err) {
+        if (!err.restart) { throw err; } // an actual error
+        return MathJax.Callback.After([toMathML, jax, callback], err.restart);
+    }
+    MathJax.Callback(callback)(mathML);
+}
+
+MathJax.Hub.Queue(function () {
+    var jax = MathJax.Hub.getAllJax();
+    toMathML(jax[0], function (mathML) {
+        console.log(jax[0].originalText);
+        console.log(mathML);
+        console.log((new XMLSerializer()).serializeToString(document.querySelector('svg')));
+        console.log('done');
+    });
+});
+</script>
+</head>
+<body>$$x_1, x_2 , \cdots x_n.$$</body>
+</html>
