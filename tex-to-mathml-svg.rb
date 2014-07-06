@@ -1,17 +1,4 @@
 module TexToMathMLSVG
-
-    # This generator is EXTREMELY slow as it invokes PhantomJS.
-    # As such, it exits early when running inside "serve -w".
-    # Configuration Options
-    # tex_to_mathml_svg:
-    #     phantomjs: The absolute path to PhantomJS binary. Defaults to /usr/bin/
-    #     enable_in_serve_watch: Enables the generator in "serve -w" when set true.
-    #     omit_mathml: Disables MathML generation.
-    #     inline_start: The delimiter for the start of an inline (contains no new line) TeX expression. Defatuls to $.
-    #     inline_end: Ditto for the end.
-    #     outofline_start: The delimiter for the start of an out-of-line MathML expression. Defaults to $$.
-    #     outofline_end: Ditto for the end.
-
     class TexToMathMLSVG < Jekyll::Generator
         safe false
 
@@ -34,7 +21,7 @@ module TexToMathMLSVG
             config = site.config['tex_to_mathml_svg'] || {}
 
             # FIXME: Figure out a better way to avoid running inside serve -w
-            @full_generation = ARGV[0] != 'serve' || config['enable_in_serve_watch']
+            @full_generation = !config['disable'] && (ARGV[0] != 'serve' || config['enable_in_serve_watch'])
             @disable_mathml = config['disable_mathml']
 
             @phantomjs = config['phantomjs'] || DEFAULT_PHANTOMJS_PATH
