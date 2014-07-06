@@ -25,7 +25,7 @@ MathJax.Hub.Queue(function () {
     var jax = MathJax.Hub.getAllJax();
     toMathML(jax[0], function (mathML) {
         console.log(jax[0].originalText);
-        console.log(mathML);
+        console.log(mathML.replace(/\s*[\r\n]\s*/g, ''));
         var svgElements = document.querySelectorAll('svg');
         var serializer = new XMLSerializer();
         var svgMarkup = '';

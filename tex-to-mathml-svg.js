@@ -17,9 +17,9 @@ function main() {
                 document.body.textContent = '$$' + texExpression + '$$';
             }, texExpression);
             page.onConsoleMessage = function (line) {
+                console.log(line);
                 if (line == 'done')
                     phantom.exit(0);
-                console.log(line);
             }
         });
 
