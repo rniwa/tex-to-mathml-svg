@@ -22,11 +22,12 @@ function toMathML(jax, callback) {
 }
 
 MathJax.Hub.Queue(function () {
+    const indent = '    ';
     function outputJax(jax, mathML, svgPrefix) {
         console.log(jax.originalText);
-        console.log(mathML.replace(/\s*[\r\n]\s*/g, ''));
+        console.log(indent + mathML.replace(/\s*[\r\n]\s*/g, ''));
         var svgForJax = document.querySelector('#' + jax.inputID + '-Frame svg');
-        console.log(svgPrefix + serializeSVG(svgForJax));
+        console.log(indent + svgPrefix + serializeSVG(svgForJax));
     }
 
     var xmlSerializer = new XMLSerializer();

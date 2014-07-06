@@ -39,26 +39,58 @@ module TexToMathMLSVG
 
         private
         def convert(page_or_post)
+            expressions = []
+            page_or_post.content.scan(@expression_regex) { |match|
+                expressions.push($1 || $2)
+            }
+
+            expression_to_mathml_svg = @full_generation ? generate_mathml_and_svg(expressions) : {}
+            return if expression_to_mathml_svg.nil?
+
             page_or_post.content.gsub!(@expression_regex) do |match|
-                expression = $1 || $2
+                expression = ($1 || $2).strip()
                 classes = $1 ? 'inline-math' : 'out-of-line-math'
                 lines = []
 
-                if !@full_generation
+                mathml_svg = expression_to_mathml_svg[expression]
+
+                if !mathml_svg
                     "<b>#{expression}</b>"
                 else
-                    IO.popen([@phantomjs, @converterjs, expression]) { |io|
-                        io.each_line { |line| lines.push(line.strip()) }
-                        # FIXME: Figure out how to report errors properly
-                        print "Failed to convert", expression, "\n", lines if lines[-1] != 'done'
-                    }
-                    mathml = lines[1].gsub(/\<\!\-\- [^\>]+ \-\-\>/, '')
+                    mathml = mathml_svg[:mathml].gsub(/\<\!\-\- [^\>]+ \-\-\>/, '')
                     mathml_markup = @disable_mathml ? '' : '<span class="mathml">' + mathml + '</span>'
-                    svg = lines[2]
+                    svg = mathml_svg[:svg]
                     "<span class=\"math #{classes}\" title=\"#{expression}\">#{mathml_markup}<span class=\"svg\">#{svg}</span></span>"
                 end
             end
         end
 
+        private
+        def generate_mathml_and_svg(expressions)
+            expression_to_mathml_svg = {}
+            return {} if expressions.empty?
+            IO.popen([@phantomjs, @converterjs] + expressions) do |io|
+                current_expression = nil
+                current_mathml = nil
+                done = false
+                io.each_line do |line|
+                    if line == "done\n"
+                        done = true
+                    elsif not line.start_with?(' ')
+                        current_expression = line.strip()
+                    elsif not current_mathml
+                        current_mathml = line.strip()
+                    else
+                        expression_to_mathml_svg[current_expression] = {:mathml => current_mathml, :svg => line.strip()}
+                    end
+                end
+                # FIXME: Figure out how to report errors properly
+                if not done
+                    print "Failed to convert", expressions
+                    return nil
+                end
+            end
+            return expression_to_mathml_svg
+        end
     end
 end
