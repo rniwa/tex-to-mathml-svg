@@ -12,7 +12,7 @@ function main() {
         var webPage = require('webpage');
         var page = webPage.create();
         var results = [];
-        page.open('mathjax-sandbox.html', function (status) {
+        page.open(phantom.libraryPath + '/mathjax-sandbox.html', function (status) {
             page.evaluate(function (texExpression) {
                 document.body.textContent = '$$' + texExpression + '$$';
             }, texExpression);
