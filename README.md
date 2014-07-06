@@ -6,7 +6,10 @@ Converts TeX expression into MathML and SVG using MathJax and PhantomJS.
 Install [PhantomJS](http://phantomjs.org) into `/usr/bin/` and run `tex-to-mathml-svg.js`
 or manually invoke the script as follows, which would emit the original expression, MathML, and SVG:
 
-```<PathToPhantomJS>/phantomjs tex-to-mathml-svg.js "y = 2x + 1"```
+```<PathToPhantomJS>/phantomjs tex-to-mathml-svg.js "y = 2x + 1" "\frac{1}{2}"```
+
+When multiple expressions are passed into the script, the generated SVG markups share the glyph definitions
+included in the first SVG so they all need to appear in a single document.
 
 # Integrating into Jekyll
 

@@ -22,20 +22,32 @@ function toMathML(jax, callback) {
 }
 
 MathJax.Hub.Queue(function () {
-    var jax = MathJax.Hub.getAllJax();
-    toMathML(jax[0], function (mathML) {
-        console.log(jax[0].originalText);
+    function outputJax(jax, mathML, svgPrefix) {
+        console.log(jax.originalText);
         console.log(mathML.replace(/\s*[\r\n]\s*/g, ''));
-        var svgElements = document.querySelectorAll('svg');
-        var serializer = new XMLSerializer();
-        var svgMarkup = '';
-        for (var i = 0; i < svgElements.length; i++) {
-            if (!svgElements[i].getAttribute('viewBox'))
-                svgElements[i].style.display = 'none';
-            svgMarkup += serializer.serializeToString(svgElements[i]).replace(/href=/g, 'xlink:href=');
-        }
-        console.log(svgMarkup);
-        console.log('done');
+        var svgForJax = document.querySelector('#' + jax.inputID + '-Frame svg');
+        console.log(svgPrefix + serializeSVG(svgForJax));
+    }
+
+    var xmlSerializer = new XMLSerializer();
+    function serializeSVG(svg) {
+        // Workaround WebKit bug that href attributes aren't xlink prefixed.
+        return xmlSerializer.serializeToString(svg).replace(/ href=/g, ' xlink:href=')
+    }
+
+    var hiddenSVG = document.getElementById('MathJax_SVG_glyphs').parentNode;
+    hiddenSVG.setAttribute('class', 'math-definitions');
+    hiddenSVG.setAttribute('style', 'display: none');
+    var serializedHiddenSVG = serializeSVG(hiddenSVG);
+    var successCounter = 0;
+    MathJax.Hub.getAllJax().forEach(function (jax, index, array) {
+        toMathML(jax, function (mathML) {
+            outputJax(jax, mathML, serializedHiddenSVG);
+            serializedHiddenSVG = '';
+            successCounter++;
+            if (successCounter == array.length)
+                console.log('done');
+        });
     });
 });
 </script>
