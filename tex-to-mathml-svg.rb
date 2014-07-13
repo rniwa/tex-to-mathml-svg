@@ -41,12 +41,13 @@ module TexToMathMLSVG
         def convert(page_or_post)
             expressions = []
             page_or_post.content.scan(@expression_regex) { |match|
-                expressions.push($1 || $2)
+                expressions.push(($1 || $2).strip())
             }
 
             expression_to_mathml_svg = @full_generation ? generate_mathml_and_svg(expressions) : {}
             return if expression_to_mathml_svg.nil?
 
+            shared_svg = expression_to_mathml_svg[:shared_svg]
             page_or_post.content.gsub!(@expression_regex) do |match|
                 expression = ($1 || $2).strip()
                 classes = $1 ? 'inline-math' : 'out-of-line-math'
@@ -59,7 +60,9 @@ module TexToMathMLSVG
                 else
                     mathml = mathml_svg[:mathml].gsub(/\<\!\-\- [^\>]+ \-\-\>/, '')
                     mathml_markup = @disable_mathml ? '' : '<span class="mathml">' + mathml + '</span>'
-                    svg = mathml_svg[:svg]
+                    svg = shared_svg + mathml_svg[:svg]
+                    shared_svg = ''
+                    expression = expression.gsub(/"/,'&quot;').gsub(/</,'&lt;').gsub(/>/,'&gt;')
                     "<span class=\"math #{classes}\" title=\"#{expression}\">#{mathml_markup}<span class=\"svg\">#{svg}</span></span>"
                 end
             end
@@ -69,24 +72,35 @@ module TexToMathMLSVG
         def generate_mathml_and_svg(expressions)
             expression_to_mathml_svg = {}
             return {} if expressions.empty?
-            IO.popen([@phantomjs, @converterjs] + expressions) do |io|
+
+            IO.popen([@phantomjs, @converterjs] + expressions.uniq) do |io|
                 current_expression = nil
-                current_mathml = nil
+                current_results = {}
                 done = false
                 io.each_line do |line|
-                    if line == "done\n"
+                    if m = line.match(/^\s+((mathml)|svg)\:(.+)$/i)
+                        current_results[m[2] ? :mathml : :svg] = m[3]
+                        next
+                    end
+
+                    line = line.strip()
+                    if line.start_with?('SharedSVG:')
+                        expression_to_mathml_svg[:shared_svg] = line['SharedSVG:'.length..-1]
+                        next
+                    end
+
+                    expression_to_mathml_svg[current_expression] = current_results
+                    current_results = {}
+
+                    if line == "done"
                         done = true
-                    elsif not line.start_with?(' ')
-                        current_expression = line.strip()
-                    elsif not current_mathml
-                        current_mathml = line.strip()
                     else
-                        expression_to_mathml_svg[current_expression] = {:mathml => current_mathml, :svg => line.strip()}
+                        current_expression = line
                     end
                 end
                 # FIXME: Figure out how to report errors properly
                 if not done
-                    print "Failed to convert", expressions
+                    print "Failed to convert ", expressions, "\n"
                     return nil
                 end
             end

@@ -23,11 +23,11 @@ function toMathML(jax, callback) {
 
 MathJax.Hub.Queue(function () {
     const indent = '    ';
-    function outputJax(jax, mathML, svgPrefix) {
+    function outputJax(jax, mathML) {
         console.log(jax.originalText);
-        console.log(indent + mathML.replace(/\s*[\r\n]\s*/g, ''));
+        console.log(indent + 'MathML:' + mathML.replace(/\s*[\r\n]\s*/g, ''));
         var svgForJax = document.querySelector('#' + jax.inputID + '-Frame svg');
-        console.log(indent + svgPrefix + serializeSVG(svgForJax));
+        console.log(indent + 'SVG:' + serializeSVG(svgForJax));
     }
 
     var xmlSerializer = new XMLSerializer();
@@ -37,14 +37,16 @@ MathJax.Hub.Queue(function () {
     }
 
     var hiddenSVG = document.getElementById('MathJax_SVG_glyphs').parentNode;
-    hiddenSVG.setAttribute('class', 'math-definitions');
-    hiddenSVG.setAttribute('style', 'display: none');
-    var serializedHiddenSVG = serializeSVG(hiddenSVG);
+    if (hiddenSVG) {
+        hiddenSVG.setAttribute('class', 'math-definitions');
+        hiddenSVG.setAttribute('style', 'display: none');
+        console.log('SharedSVG:' + serializeSVG(hiddenSVG));
+    }
+
     var successCounter = 0;
     MathJax.Hub.getAllJax().forEach(function (jax, index, array) {
         toMathML(jax, function (mathML) {
-            outputJax(jax, mathML, serializedHiddenSVG);
-            serializedHiddenSVG = '';
+            outputJax(jax, mathML);
             successCounter++;
             if (successCounter == array.length)
                 console.log('done');
